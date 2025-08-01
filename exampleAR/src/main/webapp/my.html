@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>마이</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: #f8f8f8;
+    }
+    .header {
+      text-align: center;
+      padding: 20px;
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #333;
+      margin-top: 20px;
+    }
+    .my-page-list {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      gap: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      max-width: 600px;
+      margin: 0 auto;
+      padding-bottom: 90px;
+    }
+    .my-page-item {
+      display: flex;
+      align-items: center;
+      /* justify-content: space-between; */ /* 화살표가 없으므로 필요에 따라 제거하거나 flex-start 등으로 변경 가능 */
+      justify-content: flex-start; /* 텍스트를 왼쪽에 정렬 */
+      width: 100%;
+      padding: 15px 20px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      box-sizing: border-box;
+      font-size: 1.1em;
+      color: #333;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .my-page-item:hover {
+      background-color: #f0f0f0;
+    }
+    /* .my-page-item .arrow-icon { */ /* 화살표 아이콘 스타일은 이제 필요 없습니다. */
+    /* font-size: 1.2em; */
+    /* color: #999; */
+    /* margin-left: 10px; */
+    /* } */
+    /* --- 탭 바 스타일 --- */
+    .bottom-tabs {
+      position: fixed;
+      left: 0; bottom: 0;
+      width: 100%;
+      height: 70px;
+      background-color: #f0f0f0;
+      z-index: 2;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0;
+      box-sizing: border-box;
+      border-top: 1px solid #ddd;
+    }
+    .bottom-tabs button {
+      background-color: transparent;
+      color: #000;
+      border: none;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      transition: color 0.2s;
+      user-select: none;
+    }
+    .bottom-tabs button img {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+      margin-bottom: 2px;
+      filter: grayscale(100%);
+      transition: filter 0.2s;
+    }
+    .bottom-tabs button:not(:has(span)) img {
+      margin-bottom: 0;
+    }
+    .bottom-tabs button.selected {
+      color: #ff8c00;
+    }
+    .bottom-tabs button.selected img {
+      filter: none;
+    }
+    .bottom-tabs button:hover:not(.selected) {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    .bottom-tabs button:hover:not(.selected) img {
+      filter: grayscale(70%);
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  내 정보
+</div>
+
+<div class="my-page-list">
+  <div class="my-page-item">
+    <span>공지사항</span>
+  </div>
+  <div class="my-page-item">
+    <span>고객센터</span>
+  </div>
+  <div class="my-page-item">
+    <span>내 정보 수정</span>
+  </div>
+</div>
+
+<div class="bottom-tabs">
+  <button id="tabGallery"></button>
+  <button id="tabStamp"></button>
+  <button id="tabHome"></button>
+  <button id="tabInfo"></button>
+  <button id="tabMy"></button>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // ⭐ 중요한 부분: 이 tabs 배열과 하단 로직은 모든 탭 페이지에 동일하게 포함되어야 합니다. ⭐
+    const tabs = [
+      { id: "tabGallery", url: "gallery.html", text: "갤러리", icon: "assets/gallery.svg" },
+      { id: "tabStamp", url: "stamp.html", text: "스탬프", icon: "assets/stamp.svg" },
+      { id: "tabHome", url: "index.html", text: "", icon: "assets/camera.svg" },
+      { id: "tabInfo", url: "info.html", text: "정보", icon: "assets/info.svg" },
+      { id: "tabMy", url: "my.html", text: "마이", icon: "assets/person.svg" }
+    ];
+
+    tabs.forEach((tab, index) => {
+      const button = document.querySelector("#" + tab.id);
+
+      const img = document.createElement('img');
+      img.src = tab.icon;
+      img.alt = tab.text ? tab.text + " icon" : tab.id + " icon";
+      button.appendChild(img);
+
+      if (tab.text) {
+        const span = document.createElement('span');
+        span.textContent = tab.text;
+        button.appendChild(span);
+      }
+
+      // 현재 페이지의 URL을 기반으로 'selected' 클래스 추가
+      if (window.location.pathname.endsWith(tab.url)) {
+        button.classList.add("selected");
+      }
+
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.bottom-tabs button').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+        button.classList.add('selected');
+        if (tab.url) {
+          window.location.href = tab.url;
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>

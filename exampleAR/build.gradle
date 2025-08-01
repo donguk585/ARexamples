@@ -1,0 +1,85 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'war' // WAR 파일 빌드 계획이 있다면 유지, 아니라면 제거해도 됩니다.
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    // developmentOnly() 관련 부분은 모두 제거합니다.
+    // 'serve' 태스크는 Node.js 기반의 http-server를 사용하므로 Gradle 의존성이 필요 없습니다.
+}
+
+// 웹 리소스 디렉토리 설정
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java'] // 자바 소스 폴더 (필요없으면 비워도 됨)
+        }
+        resources {
+            srcDirs = ['src/main/resources'] // 리소스 폴더 (필요없으면 비워도 됨)
+        }
+        output.resourcesDir = layout.buildDirectory.dir("resources/main").get().asFile.absolutePath // 리소스 출력 디렉토리
+    }
+    // 웹앱 리소스 소스셋은 WAR 빌드 시 필요합니다.
+    // 'serve' 태스크는 이 sourceSet에 직접 의존하지 않지만, WAR 빌드 계획이 있다면 유지하세요.
+    webapp {
+        java {
+            srcDirs = [] // 웹앱은 자바 코드를 포함하지 않음
+        }
+        resources {
+            srcDirs = ["src/main/webapp"]
+        }
+    }
+}
+
+// 웹앱 리소스를 빌드 디렉토리로 복사하는 태스크 (WAR 빌드 시 필요)
+task processWebAppResources(type: Copy) {
+    from 'src/main/webapp'
+    into "${buildDir}/resources/main/webapp" // 빌드 시 war 파일 내부에 포함될 경로
+}
+
+// WAR 파일 생성 시 웹앱 리소스를 포함하도록 설정
+war {
+    from("${buildDir}/resources/main/webapp") {
+        into "" // WAR 파일의 루트 디렉토리에 복사
+    }
+}
+
+// 이전에 오류를 발생시켰던 'runWebApp' 태스크를 완전히 제거합니다.
+// tasks.register('runWebApp', JavaExec) { ... } 이 부분을 삭제하세요.
+
+// 'serve' 태스크 (npm http-server 사용) - 이 태스크만 사용합니다.
+tasks.register('serve', Exec) {
+    description = 'Starts a local web server for the webapp directory.'
+    // Node.js의 npx 명령어를 사용하여 http-server를 실행합니다.
+    // http-server가 전역으로 설치되어 있지 않아도 npx가 자동으로 다운로드하여 실행합니다.
+    commandLine 'npx', 'http-server', 'src/main/webapp', '-p', '8080'
+    standardOutput = new ByteArrayOutputStream()
+    ext.output = { return standardOutput.toString() }
+
+    // 서버가 계속 실행되도록 합니다.
+    // Ctrl+C로 종료하거나, IntelliJ의 'Stop' 버튼으로 종료합니다.
+    doLast {
+        println "Web server running at http://localhost:8080"
+        println "Press Ctrl+C to stop the server."
+    }
+}
+
+// clean 태스크에 웹앱 빌드 결과물 삭제 추가
+clean {
+    delete "${buildDir}/resources/main/webapp"
+}
+
+test {
+    useJUnitPlatform()
+}

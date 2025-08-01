@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MindAR Camera Overlay Duck (Rear Camera)</title>
+
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        .example-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        /* --- 카메라 전환 버튼 스타일 --- */
+        #cameraToggleButton {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #333;
+            transition: background-color 0.2s, border-color 0.2s;
+            position: fixed;
+            right: 10px;
+            top: 10px;
+            z-index: 3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #cameraToggleButton:hover {
+            background-color: rgba(240, 240, 240, 0.9);
+            border-color: #aaa;
+        }
+
+        /* --- 탭 바 스타일 --- */
+        .bottom-tabs {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 70px;
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            z-index: 2;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        .bottom-tabs button {
+            background-color: transparent;
+            color: #666;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+            transition: color 0.2s, background-color 0.2s;
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
+        .bottom-tabs button img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            margin-bottom: 2px;
+            filter: grayscale(100%);
+            transition: filter 0.2s;
+        }
+        .bottom-tabs button span {
+            font-weight: bold;
+        }
+        .bottom-tabs button.selected {
+            color: #ff8c00;
+        }
+        .bottom-tabs button.selected img {
+            filter: none;
+        }
+        .bottom-tabs button:hover:not(.selected) {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        .bottom-tabs button:hover:not(.selected) img {
+            filter: grayscale(50%);
+        }
+
+
+        /* --- 페이지 전환 버튼 스타일 --- */
+        .page-navigation-buttons {
+          position: fixed;
+          right: 10px;
+          bottom: 80px; /* Adjust this value to position it above the bottom-tabs */
+          z-index: 3;
+          display: flex;
+          flex-direction: column; /* Stack buttons vertically */
+          gap: 5px; /* Space between buttons */
+        }
+        .page-navigation-buttons button {
+          background-color: rgba(0, 0, 0, 0.7);
+          color: white;
+          border: none;
+          border-radius: 5px;
+          padding: 8px 12px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+        .page-navigation-buttons button:hover {
+          background-color: rgba(0, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+<div class="example-container">
+<!--    <button id="cameraToggleButton">전면 카메라로 전환</button>-->
+
+    <div class="bottom-tabs">
+        <button id="tabGallery"></button>
+        <button id="tabStamp"></button>
+        <button id="tabHome"></button>
+        <button id="tabInfo"></button>
+        <button id="tabMy"></button>
+    </div>
+
+  <div class="page-navigation-buttons">
+    <button id="pageButton1"></button>
+    <button id="pageButton2"></button>
+  </div>
+
+    <a-scene mindar-face
+             embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights: true"
+             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
+             loading-screen="enabled: false">
+        <a-assets>
+            <a-asset-item id="duck" src="assets/Duck.glb"></a-asset-item>
+
+            <img id="gallery-icon" src="assets/gallery.svg">
+            <img id="stamp-icon" src="assets/stamp.svg">
+            <img id="camera-icon" src="assets/camera.svg">
+            <img id="info-icon" src="assets/info.svg">
+            <img id="person-icon" src="assets/person.svg">
+        </a-assets>
+
+        <a-camera active="true" position="0 0 0" look-controls="enabled: false">
+            <a-gltf-model src="#duck"
+                          position="-0.4 -0.7 -2"
+                          scale="0.25 0.25 0.25"
+                          rotation="0 -90 0">
+            </a-gltf-model>
+        </a-camera>
+    </a-scene>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 탭 바 로직 (이전과 동일)
+        const tabs = [
+            { id: "tabGallery", url: "gallery.html", text: "갤러리", icon: "assets/gallery.svg" },
+            { id: "tabStamp", url: "stamp.html", text: "스탬프", icon: "assets/stamp.svg" },
+            { id: "tabHome", url: "index.html", text: "", icon: "assets/camera.svg" },
+            { id: "tabInfo", url: "info.html", text: "정보", icon: "assets/info.svg" },
+            { id: "tabMy", url: "my.html", text: "마이", icon: "assets/person.svg" }
+        ];
+
+        tabs.forEach((tab, index) => {
+            const button = document.querySelector("#" + tab.id);
+            const img = document.createElement('img');
+            img.src = tab.icon;
+            img.alt = tab.text ? tab.text + " icon" : tab.id + " icon";
+            button.appendChild(img);
+
+            if (tab.text) {
+                const span = document.createElement('span');
+                span.textContent = tab.text;
+                button.appendChild(span);
+            }
+
+            const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname + '/';
+            const tabUrlPath = tab.url.endsWith('/') ? tab.url : tab.url + '/';
+
+            if (currentPath.endsWith(tabUrlPath)) {
+                button.classList.add("selected");
+            }
+            if (tab.id === "tabHome" && (currentPath === '/' || currentPath.endsWith('/index.html/'))) {
+                button.classList.add("selected");
+            }
+
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.bottom-tabs button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                button.classList.add("selected");
+                if (tab.url) {
+                    window.location.href = tab.url;
+                }
+            });
+        });
+
+
+      // ⭐ 새로 추가된 페이지 전환 버튼 로직 ⭐
+      const pageButtons = [
+        { id: "pageButton1", url: "index.html", text: "1" },
+        { id: "pageButton2", url: "index2.html", text: "2" }
+      ];
+
+      pageButtons.forEach((btn) => {
+        const buttonElement = document.querySelector("#" + btn.id);
+        buttonElement.textContent = btn.text; // Set the button text
+
+        buttonElement.addEventListener('click', () => {
+          window.location.href = btn.url;
+        });
+      });
+      // ⭐ 페이지 전환 버튼 로직 끝 ⭐
+
+
+        // MindAR 씬과 카메라 전환 로직
+        const sceneEl = document.querySelector('a-scene');
+        const cameraToggleButton = document.querySelector("#cameraToggleButton");
+
+        let currentCameraFacingMode = 'environment';
+
+        const logCurrentCameraInfo = () => {
+            if (sceneEl.components['mindar-face'] && sceneEl.components['mindar-face'].data && sceneEl.components['mindar-face'].data.video) {
+                const video = sceneEl.components['mindar-face'].data.video;
+                if (video && video.srcObject) {
+                    const tracks = video.srcObject.getVideoTracks();
+                    if (tracks.length > 0) {
+                        const settings = tracks[0].getSettings();
+                        if (settings.facingMode) {
+                            console.log(`[Camera Info] 현재 활성화된 카메라는: ${settings.facingMode} 입니다.`);
+                        } else {
+                            console.warn("[Camera Info] 카메라 facingMode 정보를 가져올 수 없습니다. (브라우저 정책 등으로 인해)");
+                        }
+                    } else {
+                        console.warn("[Camera Info] 비디오 스트림 객체(srcObject)가 없습니다.");
+                    }
+                } else {
+                    console.warn("[Camera Info] MindAR 비디오 요소가 아직 생성되지 않았거나 유효하지 않습니다.");
+                }
+            } else {
+                console.warn("[Camera Info] MindAR-Face 컴포넌트가 아직 완전히 준비되지 않았습니다.");
+            }
+        };
+
+        const switchCamera = async () => {
+            const mindarComponent = sceneEl.components['mindar-face'];
+            if (!mindarComponent) {
+                console.error("MindAR-Face 컴포넌트를 찾을 수 없습니다.");
+                return;
+            }
+
+            currentCameraFacingMode = (currentCameraFacingMode === 'environment') ? 'user' : 'environment';
+            console.log(`[Camera Switch] ${currentCameraFacingMode === 'user' ? '전면' : '후면'} 카메라로 전환 시도...`);
+
+            try {
+                mindarComponent.pause();
+                sceneEl.setAttribute('mindar-face', 'cameraFacingMode', currentCameraFacingMode);
+                mindarComponent.play();
+
+                if (currentCameraFacingMode === 'user') {
+                    cameraToggleButton.textContent = "후면 카메라로 전환";
+                } else {
+                    cameraToggleButton.textContent = "전면 카메라로 전환";
+                }
+
+            } catch (e) {
+                console.error("[Camera Switch Error] 카메라 전환 중 오류 발생:", e);
+                alert("카메라 전환 중 오류가 발생했습니다. 브라우저 권한을 확인해주세요.");
+                currentCameraFacingMode = (currentCameraFacingMode === 'environment') ? 'user' : 'environment';
+            }
+        };
+
+        sceneEl.addEventListener('loaded', () => {
+            console.log("A-Frame Scene loaded. Initializing MindAR with rear camera.");
+            const mindarComponent = sceneEl.components['mindar-face'];
+            if (mindarComponent) {
+                sceneEl.setAttribute('mindar-face', 'cameraFacingMode', 'environment');
+                cameraToggleButton.textContent = "전면 카메라로 전환";
+                console.log("[Initial Camera] MindAR initialized with environment camera.");
+            } else {
+                console.error("MindAR-Face 컴포넌트가 로드되지 않았습니다.");
+            }
+        });
+
+        cameraToggleButton.addEventListener('click', switchCamera);
+
+        sceneEl.addEventListener('arReady', () => {
+            console.log("MindAR AR system is ready. Camera should be active!");
+        });
+
+        sceneEl.addEventListener('sourceOpen', () => {
+            console.log("MindAR video source opened!");
+            logCurrentCameraInfo();
+        });
+
+        sceneEl.addEventListener('arError', (err) => {
+            console.error("MindAR Error:", err);
+            alert("AR 시스템 오류 발생: " + err.message);
+        });
+    });
+</script>
+</body>
+</html>
