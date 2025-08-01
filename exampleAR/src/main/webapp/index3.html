@@ -2,11 +2,11 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AR.js Duck Model with Rear Camera</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, shrink-to-fit=no" />
+  <title>AR.js Location-Based AR Example</title>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
 
   <style>
     body {
@@ -21,7 +21,7 @@
       z-index: 0;
     }
 
-    /* 탭 바 스타일 (이전 코드와 동일) */
+    /* 탭 바 스타일 */
     .bottom-tabs {
       position: fixed;
       left: 0;
@@ -81,15 +81,15 @@
       filter: grayscale(50%);
     }
 
-    /* --- 페이지 전환 버튼 스타일 --- */
+    /* 페이지 전환 버튼 스타일 */
     .page-navigation-buttons {
       position: fixed;
       right: 10px;
-      bottom: 80px; /* Adjust this value to position it above the bottom-tabs */
+      bottom: 80px; /* 탭 바 위쪽에 위치 */
       z-index: 3;
       display: flex;
-      flex-direction: column; /* Stack buttons vertically */
-      gap: 5px; /* Space between buttons */
+      flex-direction: column; /* 세로로 쌓기 */
+      gap: 5px; /* 버튼 간 간격 */
     }
     .page-navigation-buttons button {
       background-color: rgba(0, 0, 0, 0.7);
@@ -103,6 +103,22 @@
     }
     .page-navigation-buttons button:hover {
       background-color: rgba(0, 0, 0, 0.9);
+    }
+
+    /* GPS 상태 오버레이 텍스트 스타일 */
+    .ar-overlay-text {
+      position: fixed;
+      bottom: 160px; /* 탭 바와 페이지 버튼 위쪽에 위치 */
+      left: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: sans-serif;
+      font-size: 14px;
+      text-align: center;
+      z-index: 10;
     }
   </style>
 </head>
@@ -118,17 +134,22 @@
 
   <div class="page-navigation-buttons">
     <button id="pageButton1"></button>
-    <button id="pageButton2"></button>
-    <button id="pageButton3"></button>
   </div>
 
-  <a-scene embedded
-           arjs='sourceType: webcam; detectionMode: mono_and_matrix; cameraParametersUrl: assets/camera_para.dat;'
-           renderer="logarithmicDepthBuffer: true;"
-           vr-mode-ui="enabled: false">
+  <div class="ar-overlay-text" id="gps-status-text">
+    GPS 위치 정보를 가져오는 중...
+  </div>
+
+  <a-scene
+          vr-mode-ui="enabled: false"
+          arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: false; '
+          gps-camera rotation-reader>
 
     <a-assets>
       <a-asset-item id="duck" src="assets/Duck.glb"></a-asset-item>
+      <a-asset-item id="glassesModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/face-tracking/assets/glasses/scene.gltf"></a-asset-item>
+      <a-asset-item id="glassesModel2" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/face-tracking/assets/glasses2/scene.gltf"></a-asset-item>
+      <a-asset-item id="hatModel2" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/face-tracking/assets/hat2/scene.gltf"></a-asset-item>
 
       <img id="gallery-icon" src="assets/gallery.svg">
       <img id="stamp-icon" src="assets/stamp.svg">
@@ -137,28 +158,43 @@
       <img id="person-icon" src="assets/person.svg">
     </a-assets>
 
-    <a-marker preset='hiro'>
-      <a-gltf-model src="#duck"
-                    position="0 0 0"  scale="0.7 0.7 0.7"  rotation="0 -90 0">
-      </a-gltf-model>
-    </a-marker>
+    <a-gltf-model src="#duck"
+                  gps-entity-place="latitude: 35.1587; longitude: 129.1601;"
+                  position="0 0 0"  scale="0.7 0.7 0.7"
+                  rotation="0 0 0">
+    </a-gltf-model>
 
-    <a-entity camera></a-entity>
+    <a-gltf-model src="#glassesModel"
+                  gps-entity-place="latitude: 35.15872; longitude: 129.16015;"
+                  position="0 0 0"
+                  scale="0.3 0.3 0.3"
+                  rotation="0 0 0">
+    </a-gltf-model>
+
+    <a-gltf-model src="#hatModel2"
+                  gps-entity-place="latitude: 35.15868; longitude: 129.16005;"
+                  position="0 0 0"
+                  scale="0.1 0.1 0.1"
+                  rotation="0 0 0">
+    </a-gltf-model>
+
+    <a-camera gps-camera rotation-reader></a-camera>
+
   </a-scene>
 </div>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    // 탭 바 로직 (이전과 동일하게 유지)
+    // 탭 바 로직 (기존 코드와 동일)
     const tabs = [
       { id: "tabGallery", url: "gallery.html", text: "갤러리", icon: "assets/gallery.svg" },
       { id: "tabStamp", url: "stamp.html", text: "스탬프", icon: "assets/stamp.svg" },
-      { id: "tabHome", url: "index.html", text: "", icon: "assets/camera.svg" },
+      { id: "tabHome", url: "index.html", text: "", icon: "assets/camera.svg" }, // location_ar.html로 연결하려면 url 변경 필요
       { id: "tabInfo", url: "info.html", text: "정보", icon: "assets/info.svg" },
       { id: "tabMy", url: "my.html", text: "마이", icon: "assets/person.svg" }
     ];
 
-    tabs.forEach((tab, index) => {
+    tabs.forEach((tab) => {
       const button = document.querySelector("#" + tab.id);
       const img = document.createElement('img');
       img.src = tab.icon;
@@ -171,15 +207,22 @@
         button.appendChild(span);
       }
 
-      const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname : window.location.pathname + '/';
-      const tabUrlPath = tab.url.endsWith('/') ? tab.url : tab.url + '/';
+      // 현재 페이지에 따라 'selected' 클래스 추가
+      const currentFileName = window.location.pathname.split('/').pop();
+      const tabUrlFileName = tab.url.split('/').pop();
 
-      if (currentPath.endsWith(tabUrlPath)) {
+      if (currentFileName === tabUrlFileName) {
         button.classList.add("selected");
       }
-      if (tab.id === "tabHome" && (currentPath === '/' || currentPath.endsWith('/index.html/'))) {
+      // 'tabHome'이 'index.html'이 아니라 이 페이지라면, 이 페이지를 선택됨으로 표시
+      if (tab.id === "tabHome" && currentFileName === "location_ar.html") {
         button.classList.add("selected");
       }
+      // index.html이거나 / 일 경우 tabHome 선택
+      if (tab.id === "tabHome" && (currentFileName === "" || currentFileName === "index.html")) {
+        button.classList.add("selected");
+      }
+
 
       button.addEventListener('click', () => {
         document.querySelectorAll('.bottom-tabs button').forEach(btn => {
@@ -192,53 +235,63 @@
       });
     });
 
-
-    // ⭐ 새로 추가된 페이지 전환 버튼 로직 ⭐
+    // 페이지 전환 버튼 로직 (기존 코드와 동일)
     const pageButtons = [
-      { id: "pageButton1", url: "index.html", text: "1" },
-      { id: "pageButton2", url: "index2.html", text: "2" },
-      { id: "pageButton3", url: "index3.html", text: "3" }
+      { id: "pageButton1", url: "index.html", text: "마커AR (index.html)" }, // 예시로 index.html로 연결
+      // { id: "pageButton2", url: "index2.html", text: "얼굴AR (index2.html)" },
+      // { id: "pageButton3", url: "index3.html", text: "AR.js 마커 (index3.html)" },
+      // 새로운 위치 기반 AR 페이지로의 버튼 추가 (예시)
+      { id: "pageButtonLocation", url: "location_ar.html", text: "위치AR (현재)" }
     ];
 
+    // 기존 pageButton1만 있었던 div에 버튼들을 동적으로 추가
+    const pageNavigationButtonsDiv = document.querySelector(".page-navigation-buttons");
+    pageNavigationButtonsDiv.innerHTML = ''; // 기존 버튼 비우기
+
     pageButtons.forEach((btn) => {
-      const buttonElement = document.querySelector("#" + btn.id);
-      buttonElement.textContent = btn.text; // Set the button text
+      const buttonElement = document.createElement('button');
+      buttonElement.id = btn.id;
+      buttonElement.textContent = btn.text;
 
       buttonElement.addEventListener('click', () => {
         window.location.href = btn.url;
       });
+      pageNavigationButtonsDiv.appendChild(buttonElement);
     });
-    // ⭐ 페이지 전환 버튼 로직 끝 ⭐
 
+    // GPS 상태 업데이트를 위한 스크립트
+    const gpsStatusText = document.getElementById('gps-status-text');
 
-    // AR.js는 기본적으로 후면 카메라를 사용하며,
-    // 별도의 카메라 전환 로직은 AR.js A-Frame 컴포넌트에서 직접 제공하지 않습니다.
-    // 따라서 카메라 전환 버튼 및 관련 JS 로직은 제거됩니다.
-
+    // AR.js GPS 초기화 이벤트 리스너
     const sceneEl = document.querySelector('a-scene');
+    sceneEl.addEventListener('gps-init', () => {
+      console.log('AR.js GPS initiated. Waiting for position.');
+      gpsStatusText.textContent = 'GPS 초기화됨. 위치 정보를 기다리는 중...';
+    });
 
-    // AR.js 씬이 로드되었을 때 (선택 사항)
+    // GPS 위치 업데이트 이벤트 리스너
+    window.addEventListener('gps-camera-update-position', e => {
+      const { latitude, longitude } = e.detail.position;
+      gpsStatusText.textContent = `현재 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+      console.log(`GPS Updated: Lat ${latitude.toFixed(6)}, Lng ${longitude.toFixed(6)}`);
+    });
+
+    // GPS 오류 이벤트 리스너
+    window.addEventListener('gps-camera-error', e => {
+      gpsStatusText.textContent = `GPS 오류: ${e.detail.message}`;
+      console.error(`GPS Error: ${e.detail.message}`);
+    });
+
+    // AR.js 카메라 로드 완료 이벤트 리스너 (선택 사항)
+    sceneEl.addEventListener('gps-camera-update-loaded', () => {
+      console.log('GPS Camera loaded.');
+      // gpsStatusText.textContent = 'GPS 카메라 로드됨.'; // 위치 업데이트와 겹칠 수 있으므로 주석 처리
+    });
+
+    // A-Frame 씬 로드 완료 이벤트 (일반적인 A-Frame 로딩 확인용)
     sceneEl.addEventListener('loaded', () => {
-      console.log("AR.js Scene loaded. Waiting for marker detection.");
+      console.log("A-Frame Scene loaded.");
     });
-
-    // AR.js가 AR 시스템을 시작했을 때 (선택 사항)
-    sceneEl.addEventListener('arjs-initialized', () => {
-      console.log("AR.js system initialized. Rear camera should be active.");
-      // AR.js는 기본적으로 후면 카메라를 사용하므로 별도의 카메라 방향 로그는 필요하지 않습니다.
-      console.log("[Camera Info] AR.js is using the rear camera (default).");
-    });
-
-    // 마커가 인식되거나 인식이 해제될 때의 이벤트 리스너 (선택 사항)
-    const marker = document.querySelector('a-marker');
-    if (marker) {
-      marker.addEventListener('markerFound', () => {
-        console.log("Marker 'Hiro' found! Duck model should be visible.");
-      });
-      marker.addEventListener('markerLost', () => {
-        console.log("Marker 'Hiro' lost! Duck model should be hidden.");
-      });
-    }
   });
 </script>
 </body>
