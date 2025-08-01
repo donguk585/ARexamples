@@ -127,6 +127,8 @@
 
         <a-assets>
             <a-asset-item id="duck" src="assets/Duck.glb"></a-asset-item>
+            <a-asset-item id="glassesModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/face-tracking/assets/glasses/scene.gltf"></a-asset-item>
+            <a-asset-item id="glassesModel2" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/face-tracking/assets/glasses2/scene.gltf"></a-asset-item>
 
             <img id="gallery-icon" src="assets/gallery.svg">
             <img id="stamp-icon" src="assets/stamp.svg">
@@ -137,6 +139,12 @@
 
         <a-marker preset='hiro'>
             <a-gltf-model src="#duck"
+                          position="0 8 0"  scale="0.7 0.7 0.7"  rotation="0 -90 0">
+            </a-gltf-model>
+            <a-gltf-model src="#glassesModel"
+                          position="0 0 0"  scale="0.7 0.7 0.7"  rotation="0 -90 0">
+            </a-gltf-model>
+            <a-gltf-model src="#glassesModel2"
                           position="0 0 0"  scale="0.7 0.7 0.7"  rotation="0 -90 0">
             </a-gltf-model>
         </a-marker>
